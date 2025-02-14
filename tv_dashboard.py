@@ -5,7 +5,7 @@ import datetime
 
 # TMDB API Configuration
 TMDB_ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxOWNhNzUyYjRmMTVhMzE0NjBjMjhmZGRmNmUyMGVlNyIsIm5iZiI6MTY0MzQ1MDgwMy44MTcsInN1YiI6IjYxZjUxMWIzMDI4NDIwMDA5NDVjZTYzMCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.whaF_oCk9NmW5zsIGIRORek1mBZIALUI9AMOvgvmd0w"
-TV_SERIES_IDS = [208569, 214162, 250307, 95396, 255055, 208397, 138503]  # Replace with the TV series IDs you want to track
+TV_SERIES_IDS = [208569, 214162, 250307, 95396, 255055, 208397, 138503, 117488, 95557]  # Replace with the TV series IDs you want to track
 HEADERS = {"Authorization": f"Bearer {TMDB_ACCESS_TOKEN}"}
 TMDB_URL = "https://api.themoviedb.org/3/tv/{}"
 
