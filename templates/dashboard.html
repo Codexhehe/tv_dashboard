@@ -19,16 +19,22 @@
             text-align: center;
             margin-bottom: 20px;
         }
-        .btn-refresh {
+        .btn-refresh, .btn-toggle {
             background-color: #ff9800;
             color: white;
             border: none;
             padding: 10px 20px;
             font-size: 18px;
             border-radius: 5px;
+            margin: 5px;
         }
-        .btn-refresh:hover {
+        .btn-refresh:hover, .btn-toggle:hover {
             background-color: #e68900;
+        }
+        .episode-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
         }
         .card {
             background-color: #1e1e1e;
@@ -36,6 +42,7 @@
             border-radius: 12px;
             overflow: hidden;
             transition: transform 0.2s ease-in-out;
+            text-align: center;
         }
         .card:hover {
             transform: scale(1.05);
@@ -46,27 +53,40 @@
             object-fit: cover;
         }
         .card-body {
-            text-align: center;
-        }
-        .card-title {
-            font-size: 18px;
-            font-weight: bold;
-        }
-        .card-text {
-            font-size: 14px;
+            padding: 15px;
         }
         .countdown {
             font-size: 14px;
             font-weight: bold;
             color: #ff9800;
         }
+
+        /* Default List View */
+        .episode-container.list-view .card {
+            width: 100%;
+            display: flex;
+            align-items: center;
+        }
+        .episode-container.list-view .card img {
+            width: 150px;
+            height: auto;
+            margin-right: 15px;
+        }
+
+        /* Tile View */
+        .episode-container.tile-view {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        .episode-container.tile-view .card {
+            width: 100%;
+        }
+
         @media (max-width: 768px) {
-            .btn-refresh {
+            .btn-refresh, .btn-toggle {
                 font-size: 16px;
                 padding: 8px 16px;
-            }
-            .card {
-                margin-bottom: 15px;
             }
             .card-title {
                 font-size: 16px;
@@ -82,23 +102,22 @@
         <div class="header">
             <h2>📺 TV Series Episode Tracker</h2>
             <button class="btn btn-refresh" id="refresh-btn">🔄 Refresh Episodes</button>
+            <button class="btn btn-toggle" id="toggle-view">🔳 Toggle View</button>
         </div>
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="episodes-container">
+        <div class="episode-container list-view" id="episodes-container">
             {% for episode in episodes %}
-            <div class="col">
-                <div class="card">
-                    <img src="{{ episode.poster_url }}" alt="Poster">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ episode.name }}</h5>
-                        <p class="card-text">
-                            <strong>Season:</strong> {{ episode.season }}<br>
-                            <strong>Episode:</strong> {{ episode.episode }}<br>
-                            <strong>Title:</strong> {{ episode.title }}<br>
-                            <strong>Air Date:</strong> {{ episode.air_date }}<br>
-                            <span class="countdown" data-airdate="{{ episode.air_date }}">⌛ Loading...</span>
-                        </p>
-                        <a href="{{ episode.tmdb_link }}" target="_blank" class="btn btn-warning btn-sm">View on TMDB</a>
-                    </div>
+            <div class="card">
+                <img src="{{ episode.poster_url }}" alt="Poster">
+                <div class="card-body">
+                    <h5 class="card-title">{{ episode.name }}</h5>
+                    <p class="card-text">
+                        <strong>Season:</strong> {{ episode.season }}<br>
+                        <strong>Episode:</strong> {{ episode.episode }}<br>
+                        <strong>Title:</strong> {{ episode.title }}<br>
+                        <strong>Air Date:</strong> {{ episode.air_date }}<br>
+                        <span class="countdown" data-airdate="{{ episode.air_date }}">⌛ Loading...</span>
+                    </p>
+                    <a href="{{ episode.tmdb_link }}" target="_blank" class="btn btn-warning btn-sm">View on TMDB</a>
                 </div>
             </div>
             {% endfor %}
@@ -107,8 +126,8 @@
 
     <script>
         function updateCountdown() {
-            $(".countdown").each(function() {
-                let airDate = $(this).data("airdate");
+            document.querySelectorAll(".countdown").forEach(el => {
+                let airDate = el.dataset.airdate;
                 let airTime = new Date(airDate).getTime();
                 let now = new Date().getTime();
                 let diff = airTime - now;
@@ -116,28 +135,39 @@
                 if (diff > 0) {
                     let hours = Math.floor(diff / (1000 * 60 * 60));
                     let minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                    $(this).text(`⏳ Airs in ${hours}h ${minutes}m`);
+                    let seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                    el.textContent = `⏳ Airs in ${hours}h ${minutes}m ${seconds}s`;
                 } else {
-                    $(this).text("✅ Aired");
+                    el.textContent = "✅ Aired";
                 }
             });
         }
 
-        $(document).ready(function() {
-            $("#refresh-btn").click(function() {
-                $(this).text("Updating...").prop("disabled", true);
-                $.get("/update", function() {
-                    location.reload();
-                });
+        document.addEventListener("DOMContentLoaded", function() {
+            // Refresh button functionality
+            document.getElementById("refresh-btn").addEventListener("click", function() {
+                this.textContent = "Updating...";
+                this.disabled = true;
+                fetch("/update").then(() => location.reload());
+            });
+
+            // Toggle View
+            document.getElementById("toggle-view").addEventListener("click", function() {
+                const container = document.getElementById("episodes-container");
+                if (container.classList.contains("list-view")) {
+                    container.classList.remove("list-view");
+                    container.classList.add("tile-view");
+                } else {
+                    container.classList.remove("tile-view");
+                    container.classList.add("list-view");
+                }
             });
 
             // Auto-refresh every 1 hour (3600000 ms)
-            setTimeout(function() {
-                location.reload();
-            }, 3600000);
+            setTimeout(() => location.reload(), 3600000);
 
             updateCountdown();
-            setInterval(updateCountdown, 60000); // Update countdown every 1 minute
+            setInterval(updateCountdown, 1000); // Update countdown every second
         });
     </script>
 </body>
