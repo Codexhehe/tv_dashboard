@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TV Series Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            background-color: #121212;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .btn-refresh {
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 18px;
+            border-radius: 5px;
+        }
+        .btn-refresh:hover {
+            background-color: #e68900;
+        }
+        .card {
+            background-color: #1e1e1e;
+            color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.2s ease-in-out;
+        }
+        .card:hover {
+            transform: scale(1.05);
+        }
+        .card img {
+            width: 100%;
+            height: 450px;
+            object-fit: cover;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+        .card-body {
+            text-align: center;
+        }
+        .card-title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .card-text {
+            font-size: 16px;
+        }
+        .countdown {
+            font-size: 16px;
+            font-weight: bold;
+            color: #ff9800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="header">
+            <h2>📺 TV Series Episode Tracker</h2>
+            <button class="btn btn-refresh" id="refresh-btn">🔄 Refresh Episodes</button>
+        </div>
+        <div class="row" id="episodes-container">
+            {% for episode in episodes %}
+            <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
+                <div class="card">
+                    <img src="{{ episode.poster_url }}" alt="Poster">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ episode.name }}</h5>
+                        <p class="card-text">
+                            <strong>Season:</strong> {{ episode.season }}<br>
+                            <strong>Episode:</strong> {{ episode.episode }}<br>
+                            <strong>Title:</strong> {{ episode.title }}<br>
+                            <strong>Air Date:</strong> {{ episode.air_date }}<br>
+                            <span class="countdown" data-airdate="{{ episode.air_date }}">⌛ Loading...</span>
+                        </p>
+                        <a href="{{ episode.tmdb_link }}" target="_blank" class="btn btn-warning">View on TMDB</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        function updateCountdown() {
+            $(".countdown").each(function() {
+                let airDate = $(this).data("airdate");
+                let airTime = new Date(airDate).getTime();
+                let now = new Date().getTime();
+                let diff = airTime - now;
+
+                if (diff > 0) {
+                    let hours = Math.floor(diff / (1000 * 60 * 60));
+                    let minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    $(this).text(`⏳ Airs in ${hours}h ${minutes}m`);
+                } else {
+                    $(this).text("✅ Aired");
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            $("#refresh-btn").click(function() {
+                $(this).text("Updating...").prop("disabled", true);
+                $.get("/update", function() {
+                    location.reload();
+                });
+            });
+
+            // Auto-refresh every 1 hour (3600000 ms)
+            setTimeout(function() {
+                location.reload();
+            }, 3600000);
+
+            updateCountdown();
+            setInterval(updateCountdown, 60000); // Update countdown every 1 minute
+        });
+    </script>
+</body>
+</html>
