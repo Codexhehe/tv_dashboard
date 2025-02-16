@@ -19,81 +19,50 @@
             text-align: center;
             margin-bottom: 20px;
         }
-        .btn-refresh, .btn-toggle {
+        .btn-refresh {
             background-color: #ff9800;
             color: white;
             border: none;
             padding: 10px 20px;
             font-size: 18px;
             border-radius: 5px;
-            margin: 5px;
+            margin: 10px 0;
         }
-        .btn-refresh:hover, .btn-toggle:hover {
+        .btn-refresh:hover {
             background-color: #e68900;
         }
         .episode-container {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
+            gap: 15px;
         }
         .card {
             background-color: #1e1e1e;
             color: white;
             border-radius: 12px;
             overflow: hidden;
-            transition: transform 0.2s ease-in-out;
             text-align: center;
-        }
-        .card:hover {
-            transform: scale(1.05);
+            width: 300px;
         }
         .card img {
             width: 100%;
             height: auto;
-            object-fit: cover;
         }
         .card-body {
             padding: 15px;
+        }
+        .episode-dates {
+            background-color: #222;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 14px;
         }
         .countdown {
             font-size: 14px;
             font-weight: bold;
             color: #ff9800;
-        }
-
-        /* Default List View */
-        .episode-container.list-view .card {
-            width: 100%;
-            display: flex;
-            align-items: center;
-        }
-        .episode-container.list-view .card img {
-            width: 150px;
-            height: auto;
-            margin-right: 15px;
-        }
-
-        /* Tile View */
-        .episode-container.tile-view {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
-        }
-        .episode-container.tile-view .card {
-            width: 100%;
-        }
-
-        @media (max-width: 768px) {
-            .btn-refresh, .btn-toggle {
-                font-size: 16px;
-                padding: 8px 16px;
-            }
-            .card-title {
-                font-size: 16px;
-            }
-            .card-text {
-                font-size: 12px;
-            }
         }
     </style>
 </head>
@@ -102,21 +71,21 @@
         <div class="header">
             <h2>📺 TV Series Episode Tracker</h2>
             <button class="btn btn-refresh" id="refresh-btn">🔄 Refresh Episodes</button>
-            <button class="btn btn-toggle" id="toggle-view">🔳 Toggle View</button>
         </div>
-        <div class="episode-container list-view" id="episodes-container">
+        <div class="episode-container">
             {% for episode in episodes %}
             <div class="card">
                 <img src="{{ episode.poster_url }}" alt="Poster">
                 <div class="card-body">
                     <h5 class="card-title">{{ episode.name }}</h5>
-                    <p class="card-text">
-                        <strong>Season:</strong> {{ episode.season }}<br>
-                        <strong>Episode:</strong> {{ episode.episode }}<br>
-                        <strong>Title:</strong> {{ episode.title }}<br>
-                        <strong>Air Date:</strong> {{ episode.air_date }}<br>
-                        <span class="countdown" data-airdate="{{ episode.air_date }}">⌛ Loading...</span>
-                    </p>
+
+                    <div class="episode-dates">
+                        <p><strong>📅 Last Episode:</strong> {{ episode.last_episode.air_date }} (S{{ episode.last_episode.season }}E{{ episode.last_episode.episode }})</p>
+                        <p><strong>🕒 Next Episode:</strong> {{ episode.next_episode.air_date }} (S{{ episode.next_episode.season }}E{{ episode.next_episode.episode }})</p>
+                    </div>
+
+                    <p class="countdown" data-airdate="{{ episode.next_episode.air_date }}">⌛ Loading...</p>
+
                     <a href="{{ episode.tmdb_link }}" target="_blank" class="btn btn-warning btn-sm">View on TMDB</a>
                 </div>
             </div>
@@ -133,10 +102,10 @@
                 let diff = airTime - now;
 
                 if (diff > 0) {
-                    let hours = Math.floor(diff / (1000 * 60 * 60));
+                    let days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    let hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                     let minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                    let seconds = Math.floor((diff % (1000 * 60)) / 1000);
-                    el.textContent = `⏳ Airs in ${hours}h ${minutes}m ${seconds}s`;
+                    el.textContent = `⏳ Airs in ${days}d ${hours}h ${minutes}m`;
                 } else {
                     el.textContent = "✅ Aired";
                 }
@@ -144,30 +113,14 @@
         }
 
         document.addEventListener("DOMContentLoaded", function() {
-            // Refresh button functionality
             document.getElementById("refresh-btn").addEventListener("click", function() {
                 this.textContent = "Updating...";
                 this.disabled = true;
                 fetch("/update").then(() => location.reload());
             });
 
-            // Toggle View
-            document.getElementById("toggle-view").addEventListener("click", function() {
-                const container = document.getElementById("episodes-container");
-                if (container.classList.contains("list-view")) {
-                    container.classList.remove("list-view");
-                    container.classList.add("tile-view");
-                } else {
-                    container.classList.remove("tile-view");
-                    container.classList.add("list-view");
-                }
-            });
-
-            // Auto-refresh every 1 hour (3600000 ms)
-            setTimeout(() => location.reload(), 3600000);
-
             updateCountdown();
-            setInterval(updateCountdown, 1000); // Update countdown every second
+            setInterval(updateCountdown, 60000);
         });
     </script>
 </body>
