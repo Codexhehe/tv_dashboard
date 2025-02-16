@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 # TMDB API Read Access Token
 TMDB_API_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxOWNhNzUyYjRmMTVhMzE0NjBjMjhmZGRmNmUyMGVlNyIsIm5iZiI6MTY0MzQ1MDgwMy44MTcsInN1YiI6IjYxZjUxMWIzMDI4NDIwMDA5NDVjZTYzMCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.whaF_oCk9NmW5zsIGIRORek1mBZIALUI9AMOvgvmd0w"
-TV_SERIES_IDS = [208569, 214162, 250307, 95396, 255055, 208397, 138503, 117488, 95557]  # Replace with your TV series IDs
+TV_SHOW_IDS = [208569, 214162, 250307, 95396, 255055, 208397, 138503, 117488, 95557]  # Replace with your TV series IDs
 
 def format_date(date_str):
     """Convert TMDB's YYYY-MM-DD format to a more readable format."""
